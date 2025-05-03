@@ -1,0 +1,33 @@
+.user-type-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  
+  
+  
+  .user-type-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+   
+    border-radius: 10px;
+    color: white;
+    font-size: 1em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 400ms;
+    border: none;
+  }
+  
+  .user-type-btn:hover {
+    transform: scale(1.1);
+  }
+  
+  .user-type-selection:hover > .user-type-btn:not(:hover) {
+    filter: blur(10px);
+    transform: scale(0.9);
+  }

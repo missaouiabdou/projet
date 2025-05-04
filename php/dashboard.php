@@ -29,6 +29,16 @@ $stmt = $conn->prepare("SELECT * FROM stage ");
 $stmt->execute();
 $stage = $stmt->fetch(PDO::FETCH_ASSOC);
 
+// Get encadrant info
+$stmt = $conn->prepare("SELECT * FROM encadrant e WHERE e.ID_ENC = (SELECT s.ID_ENC FROM stagiaire s WHERE s.ID_STG = ?)");
+$stmt->execute([$_SESSION['id']]);
+$encadrant = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// Get service info
+$stmt = $conn->prepare("SELECT * FROM service WHERE ID_STAGE = ?");
+$stmt->execute([$stage['ID_STAGE']]);
+$service = $stmt->fetch(PDO::FETCH_ASSOC);
+
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -137,24 +147,46 @@ $stage = $stmt->fetch(PDO::FETCH_ASSOC);
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="p-4 bg-gray-50 rounded-lg">
                         <h4 class="text-sm font-medium text-gray-500 mb-2">Entreprise</h4>
-                        <p class="font-medium text-gray-800"><?php echo htmlspecialchars($stage['NOM_ENTREPRISE'] ?? 'Non assigné'); ?></p>
+                        <p class="font-medium text-gray-800">CHU</p>
                     </div>
                     <div class="p-4 bg-gray-50 rounded-lg">
                         <h4 class="text-sm font-medium text-gray-500 mb-2">Période</h4>
                         <p class="font-medium text-gray-800">
                             <?php 
-                            if (isset($stage['DATE_DEBUT']) && isset($stage['DATE_FIN'])) {
-                                echo htmlspecialchars(date('d/m/Y', strtotime($stage['DATE_DEBUT']))) . ' - ' . 
-                                     htmlspecialchars(date('d/m/Y', strtotime($stage['DATE_FIN'])));
+                            if (isset($stage['DATE_DEB_STG']) && isset($stage['DATE_FIN_STG'])) {
+                                echo htmlspecialchars(date('d/m/Y', strtotime($stage['DATE_DEB_STG']))) . ' - ' . 
+                                     htmlspecialchars(date('d/m/Y', strtotime($stage['DATE_FIN_STG'])));
                             } else {
                                 echo 'Non défini';
                             }
                             ?>
                         </p>
+                        <p class="text-sm text-gray-600 mt-1">2 mois</p>
                     </div>
                     <div class="p-4 bg-gray-50 rounded-lg">
                         <h4 class="text-sm font-medium text-gray-500 mb-2">Encadrant</h4>
-                        <p class="font-medium text-gray-800"><?php echo htmlspecialchars($stage['NOM_ENCADRANT'] ?? 'Non assigné'); ?></p>
+                        <p class="font-medium text-gray-800">
+                            <?php 
+                            if (isset($encadrant['NOM_ENC']) && isset($encadrant['PRN_ENC'])) {
+                                echo htmlspecialchars($encadrant['NOM_ENC'] . ' ' . $encadrant['PRN_ENC']);
+                            } else {
+                                echo 'Non assigné';
+                            }
+                            ?>
+                        </p>
+                        <p class="text-sm text-gray-600 mt-1"><?php echo htmlspecialchars($encadrant['MAIL_ENC'] ?? ''); ?></p>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h4 class="text-sm font-medium text-gray-500 mb-2">Service</h4>
+                        <p class="text-gray-800"><?php echo htmlspecialchars($service['NOM_SER'] ?? 'Non défini'); ?></p>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h4 class="text-sm font-medium text-gray-500 mb-2">Statut</h4>
+                        <p class="font-medium text-gray-800"><?php echo htmlspecialchars($stage['STATUT'] ?? 'En cours'); ?></p>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <h4 class="text-sm font-medium text-gray-500 mb-2">Documents</h4>
+                        <p class="text-gray-600">Aucun document disponible</p>
                     </div>
                 </div>
                 <div class="mt-4 flex justify-end">

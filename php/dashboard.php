@@ -1,23 +1,23 @@
 <?php
+include "connection.php";
 session_start();
-require_once "connection.php";
 
-// Redirect if not logged in
+
 if (!isset($_SESSION['id'])) {
-    header('Location: login.php');
+    header('Location: ../html/index.html');
     exit;
 }
 
 // Get user info
-$stmt = $conn->prepare("SELECT * FROM stagiaire WHERE id = ?");
+$stmt = $conn->prepare("SELECT * FROM stagiaire WHERE ID_STG = ?");
 $stmt->execute([$_SESSION['id']]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // Get user's niveau
-$niveau = $user['niveau'] ?? 1;
+$niveau = $user['ID_NIV'] ?? 1;
 
 // Get total messages for the user
-$stmt = $conn->prepare("SELECT COUNT(*) as total FROM messagerie WHERE id_expediteur = ?");
+$stmt = $conn->prepare("SELECT COUNT(*) as total FROM messagerie WHERE ID_STG = ?");
 $stmt->execute([$_SESSION['id']]);
 $messageCount = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
 
@@ -25,8 +25,8 @@ $messageCount = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
 $onlineCount = 0; // This would be updated via WebSocket
 
 // Get stage info
-$stmt = $conn->prepare("SELECT * FROM stage WHERE id_stagiaire = ?");
-$stmt->execute([$_SESSION['id']]);
+$stmt = $conn->prepare("SELECT * FROM stage ");
+$stmt->execute();
 $stage = $stmt->fetch(PDO::FETCH_ASSOC);
 
 ?>
@@ -99,7 +99,7 @@ $stage = $stmt->fetch(PDO::FETCH_ASSOC);
             </a>
 
             <!-- Grades Stats -->
-            <div onclick="openGradesModal()" class="bg-white rounded-lg shadow-lg p-6 card-hover border border-gray-100 cursor-pointer transform transition-all duration-150 hover:-translate-y-1">
+            <div onclick="window.location.href= 'notes.php'" class="bg-white rounded-lg shadow-lg p-6 card-hover border border-gray-100 cursor-pointer transform transition-all duration-150 hover:-translate-y-1">
                 <div class="flex items-center">
                     <div class="p-4 rounded-full bg-gradient-to-tl from-yellow-100 to-orange-100 text-yellow-600 shadow-inner">
                         <i class="fas fa-star text-2xl"></i>
@@ -112,7 +112,7 @@ $stage = $stmt->fetch(PDO::FETCH_ASSOC);
             </div>
 
             <!-- Requests Stats -->
-            <div onclick="openRequestsModal()" class="bg-white rounded-lg shadow-lg p-6 card-hover border border-gray-100 cursor-pointer transform transition-all duration-150 hover:-translate-y-1">
+            <div onclick="window.location.href= 'demandes.php'" class="bg-white rounded-lg shadow-lg p-6 card-hover border border-gray-100 cursor-pointer transform transition-all duration-150 hover:-translate-y-1">
                 <div class="flex items-center">
                     <div class="p-4 rounded-full bg-gradient-to-tl from-emerald-100 to-green-100 text-green-600 shadow-inner">
                         <i class="fas fa-file-alt text-2xl"></i>
@@ -137,15 +137,15 @@ $stage = $stmt->fetch(PDO::FETCH_ASSOC);
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="p-4 bg-gray-50 rounded-lg">
                         <h4 class="text-sm font-medium text-gray-500 mb-2">Entreprise</h4>
-                        <p class="font-medium text-gray-800"><?php echo htmlspecialchars($stage['entreprise'] ?? 'Non assigné'); ?></p>
+                        <p class="font-medium text-gray-800"><?php echo htmlspecialchars($stage['NOM_ENTREPRISE'] ?? 'Non assigné'); ?></p>
                     </div>
                     <div class="p-4 bg-gray-50 rounded-lg">
                         <h4 class="text-sm font-medium text-gray-500 mb-2">Période</h4>
                         <p class="font-medium text-gray-800">
                             <?php 
-                            if (isset($stage['date_debut']) && isset($stage['date_fin'])) {
-                                echo htmlspecialchars(date('d/m/Y', strtotime($stage['date_debut']))) . ' - ' . 
-                                     htmlspecialchars(date('d/m/Y', strtotime($stage['date_fin'])));
+                            if (isset($stage['DATE_DEBUT']) && isset($stage['DATE_FIN'])) {
+                                echo htmlspecialchars(date('d/m/Y', strtotime($stage['DATE_DEBUT']))) . ' - ' . 
+                                     htmlspecialchars(date('d/m/Y', strtotime($stage['DATE_FIN'])));
                             } else {
                                 echo 'Non défini';
                             }
@@ -154,7 +154,7 @@ $stage = $stmt->fetch(PDO::FETCH_ASSOC);
                     </div>
                     <div class="p-4 bg-gray-50 rounded-lg">
                         <h4 class="text-sm font-medium text-gray-500 mb-2">Encadrant</h4>
-                        <p class="font-medium text-gray-800"><?php echo htmlspecialchars($stage['encadrant'] ?? 'Non assigné'); ?></p>
+                        <p class="font-medium text-gray-800"><?php echo htmlspecialchars($stage['NOM_ENCADRANT'] ?? 'Non assigné'); ?></p>
                     </div>
                 </div>
                 <div class="mt-4 flex justify-end">
@@ -225,7 +225,7 @@ $stage = $stmt->fetch(PDO::FETCH_ASSOC);
                                     </p>
                                     <p class="flex justify-between">
                                         <span class="text-gray-600">Email:</span>
-                                        <span class="font-medium"><?php echo htmlspecialchars($user['email'] ?? ''); ?></span>
+                                        <span class="font-medium"><?php echo htmlspecialchars($user['EMAIL'] ?? ''); ?></span>
                                     </p>
                                 </div>
                             </div>
@@ -262,7 +262,7 @@ $stage = $stmt->fetch(PDO::FETCH_ASSOC);
                                     </p>
                                     <p class="flex justify-between">
                                         <span class="text-gray-600">Date d'inscription:</span>
-                                        <span class="font-medium"><?php echo htmlspecialchars($user['date_inscription'] ?? 'N/A'); ?></span>
+                                        <span class="font-medium"><?php echo htmlspecialchars($user['DATE_INSCRIPTION'] ?? 'N/A'); ?></span>
                                     </p>
                                 </div>
                             </div>
@@ -307,7 +307,7 @@ $stage = $stmt->fetch(PDO::FETCH_ASSOC);
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                            <input type="email" name="email" id="inputEmail" value="<?php echo htmlspecialchars($user['email'] ?? ''); ?>"
+                            <input type="email" name="email" id="inputEmail" value="<?php echo htmlspecialchars($user['EMAIL'] ?? ''); ?>"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
                         </div>
                         
@@ -367,23 +367,23 @@ $stage = $stmt->fetch(PDO::FETCH_ASSOC);
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 <?php
-                                $stmt = $conn->prepare("SELECT * FROM notes WHERE id_stagiaire = ?");
+                                $stmt = $conn->prepare("SELECT * FROM notes WHERE ID_STG = ?");
                                 $stmt->execute([$_SESSION['id']]);
                                 $notes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 
                                 foreach ($notes as $note): ?>
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        <?php echo htmlspecialchars($note['module']); ?>
+                                        <?php echo htmlspecialchars($note['NOM_MODULE']); ?>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <?php echo htmlspecialchars($note['note']); ?>/20
+                                        <?php echo htmlspecialchars($note['NOTE']); ?>/20
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <?php echo htmlspecialchars($note['coefficient']); ?>
+                                        <?php echo htmlspecialchars($note['COEFFICIENT']); ?>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        <?php echo htmlspecialchars($note['observation']); ?>
+                                        <?php echo htmlspecialchars($note['OBSERVATION']); ?>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -435,18 +435,18 @@ $stage = $stmt->fetch(PDO::FETCH_ASSOC);
                             <h4 class="text-lg font-medium text-gray-900 mb-4">Historique des demandes</h4>
                             <div class="space-y-3">
                                 <?php
-                                $stmt = $conn->prepare("SELECT * FROM demandes WHERE id_stagiaire = ? ORDER BY date_demande DESC");
+                                $stmt = $conn->prepare("SELECT * FROM demandes WHERE ID_STG = ? ORDER BY DATE_DEMANDE DESC");
                                 $stmt->execute([$_SESSION['id']]);
                                 $demandes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 
                                 foreach ($demandes as $demande): ?>
                                 <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                                     <div>
-                                        <h5 class="font-medium text-gray-900"><?php echo htmlspecialchars($demande['type_document']); ?></h5>
-                                        <p class="text-sm text-gray-500"><?php echo htmlspecialchars(date('d/m/Y', strtotime($demande['date_demande']))); ?></p>
+                                        <h5 class="font-medium text-gray-900"><?php echo htmlspecialchars($demande['TYPE_DOCUMENT']); ?></h5>
+                                        <p class="text-sm text-gray-500"><?php echo htmlspecialchars(date('d/m/Y', strtotime($demande['DATE_DEMANDE']))); ?></p>
                                     </div>
-                                    <span class="px-3 py-1 text-sm rounded-full <?php echo $demande['statut'] === 'En attente' ? 'bg-yellow-100 text-yellow-800' : ($demande['statut'] === 'Approuvé' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'); ?>">
-                                        <?php echo htmlspecialchars($demande['statut']); ?>
+                                    <span class="px-3 py-1 text-sm rounded-full <?php echo $demande['STATUT'] === 'En attente' ? 'bg-yellow-100 text-yellow-800' : ($demande['STATUT'] === 'Approuvé' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'); ?>">
+                                        <?php echo htmlspecialchars($demande['STATUT']); ?>
                                     </span>
                                 </div>
                                 <?php endforeach; ?>
@@ -472,16 +472,16 @@ $stage = $stmt->fetch(PDO::FETCH_ASSOC);
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <h4 class="text-sm font-medium text-gray-500 mb-2">Entreprise</h4>
-                                <p class="text-lg font-medium text-gray-900"><?php echo htmlspecialchars($stage['entreprise'] ?? 'Non assigné'); ?></p>
-                                <p class="text-sm text-gray-600 mt-1"><?php echo htmlspecialchars($stage['adresse'] ?? ''); ?></p>
+                                <p class="text-lg font-medium text-gray-900"><?php echo htmlspecialchars($stage['NOM_ENTREPRISE'] ?? 'Non assigné'); ?></p>
+                                <p class="text-sm text-gray-600 mt-1"><?php echo htmlspecialchars($stage['ADRESSE_ENTREPRISE'] ?? ''); ?></p>
                             </div>
                             <div>
                                 <h4 class="text-sm font-medium text-gray-500 mb-2">Période</h4>
                                 <p class="text-lg font-medium text-gray-900">
                                     <?php 
-                                    if (isset($stage['date_debut']) && isset($stage['date_fin'])) {
-                                        echo htmlspecialchars(date('d/m/Y', strtotime($stage['date_debut']))) . ' - ' . 
-                                             htmlspecialchars(date('d/m/Y', strtotime($stage['date_fin'])));
+                                    if (isset($stage['DATE_DEBUT']) && isset($stage['DATE_FIN'])) {
+                                        echo htmlspecialchars(date('d/m/Y', strtotime($stage['DATE_DEBUT']))) . ' - ' . 
+                                             htmlspecialchars(date('d/m/Y', strtotime($stage['DATE_FIN'])));
                                     } else {
                                         echo 'Non défini';
                                     }
@@ -489,9 +489,9 @@ $stage = $stmt->fetch(PDO::FETCH_ASSOC);
                                 </p>
                                 <p class="text-sm text-gray-600 mt-1">
                                     <?php
-                                    if (isset($stage['date_debut']) && isset($stage['date_fin'])) {
-                                        $debut = new DateTime($stage['date_debut']);
-                                        $fin = new DateTime($stage['date_fin']);
+                                    if (isset($stage['DATE_DEBUT']) && isset($stage['DATE_FIN'])) {
+                                        $debut = new DateTime($stage['DATE_DEBUT']);
+                                        $fin = new DateTime($stage['DATE_FIN']);
                                         $duree = $debut->diff($fin);
                                         echo $duree->format('%m mois et %d jours');
                                     }
@@ -502,19 +502,19 @@ $stage = $stmt->fetch(PDO::FETCH_ASSOC);
 
                         <div>
                             <h4 class="text-sm font-medium text-gray-500 mb-2">Encadrant</h4>
-                            <p class="text-lg font-medium text-gray-900"><?php echo htmlspecialchars($stage['encadrant'] ?? 'Non assigné'); ?></p>
-                            <p class="text-sm text-gray-600 mt-1"><?php echo htmlspecialchars($stage['email_encadrant'] ?? ''); ?></p>
+                            <p class="text-lg font-medium text-gray-900"><?php echo htmlspecialchars($stage['NOM_ENCADRANT'] ?? 'Non assigné'); ?></p>
+                            <p class="text-sm text-gray-600 mt-1"><?php echo htmlspecialchars($stage['EMAIL_ENCADRANT'] ?? ''); ?></p>
                         </div>
 
                         <div>
                             <h4 class="text-sm font-medium text-gray-500 mb-2">Sujet du Stage</h4>
-                            <p class="text-gray-900"><?php echo nl2br(htmlspecialchars($stage['sujet'] ?? 'Non défini')); ?></p>
+                            <p class="text-gray-900"><?php echo nl2br(htmlspecialchars($stage['SUJET'] ?? 'Non défini')); ?></p>
                         </div>
 
-                        <?php if (isset($stage['rapport'])): ?>
+                        <?php if (isset($stage['RAPPORT_URL'])): ?>
                         <div>
                             <h4 class="text-sm font-medium text-gray-500 mb-2">Rapport de Stage</h4>
-                            <a href="<?php echo htmlspecialchars($stage['rapport']); ?>" target="_blank" 
+                            <a href="<?php echo htmlspecialchars($stage['RAPPORT_URL']); ?>" target="_blank" 
                                class="inline-flex items-center text-indigo-600 hover:text-indigo-700">
                                 <i class="fas fa-file-pdf mr-2"></i>
                                 Télécharger le rapport
